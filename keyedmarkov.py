@@ -48,13 +48,14 @@ class KeyedMarkovEmitter(object):
         self.sequence_length = 0
 
     def setup(self, num_buckets, keys, sequence_length):
-        self.set_num_buckets(num_buckets)
         self.add_keys(*keys)
         self.set_sequence_length(sequence_length)
+        self.set_num_buckets(num_buckets)
 
     def set_num_buckets(self, num_buckets):
+        """Important: MUST BE CALLED AFTER ADD_KEYS"""
         self.num_buckets = num_buckets
-        self.buckets = dict((i, []) for i in range(0, self.num_buckets))
+        self.buckets = dict((i, (dict((key, []) for key in self.known_keys))) for i in range(0, self.num_buckets))
 
     def add_keys(self, *args):
         for key in args:
@@ -79,31 +80,36 @@ class KeyedMarkovEmitter(object):
         """
         # ratio = offset / self.sequence_length
         interval_length = self.sequence_length / float(self.num_buckets)
-        if offset < self.interval_length / 2 or offset >= (self.num_buckets * 2 - 1) * self.interval_length / 2:
+        # print "Offset: " + str(offset)
+        # print "Interval length: " + str(interval_length)
+        if offset < interval_length / 2 or offset >= (self.num_buckets * 2 - 1) * interval_length / 2:
             correct_bucket = 0
         else:
             for i in range(2, self.num_buckets + 1):
-                if offset >= ((i - 1) * 2 - 1) / 2 and offset < ((i) * 2 - 1) / 2:
-                    correct_bucket = i # oh god i hope this is right
+                # print "i: " + str(i)
+                # print "Lower bound: " + str(float((i - 1) * 2 - 1) / 2 * interval_length)
+                # print "Upper bound bound: " + str(float((i) * 2 - 1) / 2 * interval_length)
+                if offset >= float((i - 1) * 2 - 1) / 2 * interval_length and offset < float((i) * 2 - 1) / 2 * interval_length:
+                    correct_bucket = i - 1 # oh god i hope this is right
                     break
-        self.buckets[i][key].append(offset)
+        self.buckets[correct_bucket][key].append(offset)
 
     def train_sequence(self, sequence):
         for training in sequence:
             self.train(training["key"], training["offset"])
         self.end_sequence()
 
-    def get_data(self):
+    def get_data(self, use_probability_instead):
         result = []
         for bucket in self.buckets:
             bucket_result = {}
             for key in self.known_keys:
                 probability = bucket[key] / self.sequences_seen
-                rand_float = random()
-                if rand_float <= probability:
-                    bucket_result[key] = True
+                if use_probability_instead:
+                    bucket_result[key] = probability
                 else:
-                    bucket_result[key] = False
+                    rand_float = random()
+                    bucket_result[key] = rand_float <= probability
             result.append(bucket_result)
         return result
 
