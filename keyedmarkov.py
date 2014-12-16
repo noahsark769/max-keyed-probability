@@ -1,3 +1,5 @@
+from random import random
+
 class KeyedMarkovEmitter(object):
     """The keyed markov emitter is an object which can accept training data
     based on different keys and can emit back a probabalistic model of the given
@@ -15,7 +17,9 @@ class KeyedMarkovEmitter(object):
         interpolated data it outputs. For example, if we wanted to implement
         a drum machine that played intstuments probabilstcally every beat of
         a measure, we would set the interal to 0.25 to denote that there are
-        4 points every training sequence that we want to output.
+        4 points every training sequence that we want to output. We an also
+        set this interval implicitly using the number of buckets which we
+        want to divide the training sequence into.
 
         If this was the case, then the emitter would output an array of four
         dictionaries, where the keys of the dictionaries might be something
@@ -33,5 +37,73 @@ class KeyedMarkovEmitter(object):
         interval, the emitter must also know when it has NOT seen that key in
         that interval. You can also use the emitter.train_sequence method to
         train an entire sequence at once.
+
+    (4) Told how long, in milliseconds, the training sequences will be.
     """
-    pass
+
+    def __init__(self):
+        self.sequences_seen = 0
+        self.known_keys = set()
+        self.num_buckets = 0
+        self.sequence_length = 0
+
+    def setup(self, num_buckets, keys, sequence_length):
+        self.set_num_buckets(num_buckets)
+        self.add_keys(*keys)
+        self.set_sequence_length(sequence_length)
+
+    def set_num_buckets(self, num_buckets):
+        self.num_buckets = num_buckets
+        self.buckets = dict((i, []) for i in range(0, self.num_buckets))
+
+    def add_keys(self, *args):
+        for key in args:
+            self.known_keys.add(key)
+
+    def set_sequence_length(self, length):
+        self.sequence_length = length
+
+    def end_sequence(self):
+        self.sequences_seen += 1
+
+    def train(self, key, offset):
+        """Train the emitter on a specific key seen at a specific offset.
+
+        This should be called in the following way:
+
+        emitter.train(...)
+        emitter.train(...)
+        emitter.train(...)
+        ...
+        emitter.end_sequence()
+        """
+        # ratio = offset / self.sequence_length
+        interval_length = self.sequence_length / float(self.num_buckets)
+        if offset < self.interval_length / 2 or offset >= (self.num_buckets * 2 - 1) * self.interval_length / 2:
+            correct_bucket = 0
+        else:
+            for i in range(2, self.num_buckets + 1):
+                if offset >= ((i - 1) * 2 - 1) / 2 and offset < ((i) * 2 - 1) / 2:
+                    correct_bucket = i # oh god i hope this is right
+                    break
+        self.buckets[i][key].append(offset)
+
+    def train_sequence(self, sequence):
+        for training in sequence:
+            self.train(training["key"], training["offset"])
+        self.end_sequence()
+
+    def get_data(self):
+        result = []
+        for bucket in self.buckets:
+            bucket_result = {}
+            for key in self.known_keys:
+                probability = bucket[key] / self.sequences_seen
+                rand_float = random()
+                if rand_float <= probability:
+                    bucket_result[key] = True
+                else:
+                    bucket_result[key] = False
+            result.append(bucket_result)
+        return result
+
