@@ -40,11 +40,19 @@ def reset_system(received_data):
     pass
 
 def export_system(received_data):
-    pass
+    data = emitter.get_data(as_strings=True) # only booleans, not probabilities
+    result_strings = []
+    for index, datum in enumerate(data):
+        print datum
+        result_strings.append(str(index) + ":" + "-".join(
+            [known_key + "." + str(datum[known_key]) for known_key in emitter.known_keys]
+        ))
+    return result_strings
 
 def train_system_handler(addr, tags, data, source):
     log_request("train system", addr, tags, data, source)
     train_system(data)
+    print "[Info] Sending message: success" 
     osc_client.send( OSC.OSCMessage("/response", "train system:success" ) )
 
 def reset_handler(addr, tags, data, source):
@@ -53,7 +61,9 @@ def reset_handler(addr, tags, data, source):
 
 def export_data_handler(addr, tags, data, source):
     log_request("data", addr, tags, data, source)
-    osc_client.send( OSC.OSCMessage("/response", "data:success" ) )
+    return_data = export_system(data)
+    print "[Info] Returning export data: " + str(return_data)
+    osc_client.send( OSC.OSCMessage("/response", return_data ) )
 
 def main():
     osc_server.addMsgHandler("/train", train_system_handler)

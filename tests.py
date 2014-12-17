@@ -6,6 +6,26 @@ class KeyedMarkovTestCase(unittest.TestCase):
         emitter = KeyedMarkovEmitter()
         emitter.setup(4, ["hihat", "snare", "kick"], 2000)
 
+        data, buckets = emitter.get_data(True, True)
+        print buckets
+        print data
+
+        self.assertEquals(data[0]["hihat"], 0)
+        self.assertEquals(data[0]["snare"], 0)
+        self.assertEquals(data[0]["kick"], 0)
+
+        self.assertEquals(data[1]["hihat"], 0)
+        self.assertEquals(data[1]["snare"], 0)
+        self.assertEquals(data[1]["kick"], 0)
+
+        self.assertEquals(data[2]["hihat"], 0)
+        self.assertEquals(data[2]["snare"], 0)
+        self.assertEquals(data[2]["kick"], 0)
+
+        self.assertEquals(data[3]["hihat"], 0)
+        self.assertEquals(data[3]["snare"], 0)
+        self.assertEquals(data[3]["kick"], 0)
+
         emitter.train("hihat", 0)
         emitter.train("hihat", 500)
         emitter.train("hihat", 1000)
@@ -110,6 +130,16 @@ class KeyedMarkovTestCase(unittest.TestCase):
         self.assertEquals(data[3]["hihat"], 1)
         self.assertEquals(data[3]["snare"], 0.75)
         self.assertEquals(data[3]["kick"], 0.25)
+
+        data = emitter.get_data(use_probability_instead=False, return_buckets=False, as_strings=False)
+        for i in [0, 1, 2, 3]:
+            for k in ["snare", "kick", "kick"]:
+                self.assertTrue(data[i][k] in [True, False])
+
+        data = emitter.get_data(use_probability_instead=False, return_buckets=False, as_strings=True)
+        for i in [0, 1, 2, 3]:
+            for k in ["snare", "kick", "kick"]:
+                self.assertTrue(data[i][k] in ["0", "1"])
 
 if __name__ == '__main__':
     unittest.main()

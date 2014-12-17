@@ -99,17 +99,26 @@ class KeyedMarkovEmitter(object):
             self.train(training["key"], training["offset"])
         self.end_sequence()
 
-    def get_data(self, use_probability_instead=False, return_buckets=False):
+    def get_data(self, use_probability_instead=False, return_buckets=False, as_strings=False):
         result = []
         for bucket_index in self.buckets.keys():
             bucket_result = {}
             for key in self.known_keys:
-                probability = float(len(self.buckets[bucket_index][key])) / self.sequences_seen
+                if self.sequences_seen is 0:
+                    probability = 0
+                else:
+                    probability = float(len(self.buckets[bucket_index][key])) / self.sequences_seen
                 if use_probability_instead:
                     bucket_result[key] = probability
                 else:
                     rand_float = random()
-                    bucket_result[key] = rand_float <= probability
+                    if as_strings:
+                        if rand_float <= probability:
+                            bucket_result[key] = "1"    
+                        else:
+                            bucket_result[key] = "0"
+                    else:
+                        bucket_result[key] = rand_float <= probability
             result.append(bucket_result)
         if return_buckets:
             return result, self.buckets
