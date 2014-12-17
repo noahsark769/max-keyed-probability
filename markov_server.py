@@ -17,7 +17,7 @@ osc_client = OSC.OSCClient()
 osc_client.connect( send_to_address )
 
 emitter = KeyedMarkovEmitter()
-emitter.setup(16, sys.argv[2:], 2000)
+emitter.setup(16, sys.argv[3:], 2000)
 
 def log_request(id, addr, tags, stuff, source):
     print "--- Data received [" + str(id) + "]: (" + str(OSC.getUrlStr(source)) + " : " + str(addr) + ")"
@@ -48,14 +48,15 @@ def train_system(received_data, delimiter=":"):
     print "[Info] Trained system on data: " + str(training_data)
 
 def reset_system(received_data):
-    pass
+    emitter.setup(16, sys.argv[3:], 2000)
+    print "[Info] Performed emitter reset."
 
 def export_system(received_data):
     data = emitter.get_data(as_strings=True) # only booleans, not probabilities
     result_strings = []
     for index, datum in enumerate(data):
         print datum
-        result_strings.append(str(index) + ":" + "-".join(
+        result_strings.append("-".join(
             [known_key + "." + str(datum[known_key]) for known_key in emitter.known_keys]
         ))
     return result_strings
@@ -68,6 +69,7 @@ def train_system_handler(addr, tags, data, source):
 
 def reset_handler(addr, tags, data, source):
     log_request("reset", addr, tags, data, source)
+    reset_system(data)
     osc_client.send( OSC.OSCMessage("/response/reset", "reset:success" ) )
 
 def export_data_handler(addr, tags, data, source):
