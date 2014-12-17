@@ -64,17 +64,17 @@ def train_system_handler(addr, tags, data, source):
     log_request("train system", addr, tags, data, source)
     train_system(data)
     print "[Info] Sending message: success" 
-    osc_client.send( OSC.OSCMessage("/response", "train system:success" ) )
+    osc_client.send( OSC.OSCMessage("/response/train", "train system:success" ) )
 
 def reset_handler(addr, tags, data, source):
     log_request("reset", addr, tags, data, source)
-    osc_client.send( OSC.OSCMessage("/response", "reset:success" ) )
+    osc_client.send( OSC.OSCMessage("/response/reset", "reset:success" ) )
 
 def export_data_handler(addr, tags, data, source):
     log_request("data", addr, tags, data, source)
     return_data = export_system(data)
     print "[Info] Returning export data: " + str(return_data)
-    osc_client.send( OSC.OSCMessage("/response", return_data ) )
+    osc_client.send( OSC.OSCMessage("/response/export", return_data ) )
 
 def main():
     osc_server.addMsgHandler("/train", train_system_handler)
