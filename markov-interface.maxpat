@@ -38,7 +38,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 1634.0, 179.0, 50.0, 45.0 ],
-					"text" : "7000 /set_sequence"
+					"text" : "/set_sequence 7000"
 				}
 
 			}
@@ -128,7 +128,7 @@
 			}
 , 			{
 				"box" : 				{
-					"comment" : "Bang to reset",
+					"comment" : "Message an int to set sequence length",
 					"id" : "obj-127",
 					"maxclass" : "inlet",
 					"numinlets" : 0,
@@ -154,7 +154,7 @@
 			}
 , 			{
 				"box" : 				{
-					"comment" : "",
+					"comment" : "Outputs odot data",
 					"id" : "obj-123",
 					"maxclass" : "outlet",
 					"numinlets" : 1,
