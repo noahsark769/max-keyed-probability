@@ -61,11 +61,16 @@ def export_system(received_data):
         ))
     return result_strings
 
+def set_system_sequence(received_data):
+    if len(received_data) > 1:
+        print "[WARINING] Saw data for set system sequence with length greater than one!"
+    emitter.set_sequence_length(int(received_data[0]))
+
 def train_system_handler(addr, tags, data, source):
     log_request("train system", addr, tags, data, source)
     train_system(data)
     print "[Info] Sending message: success" 
-    osc_client.send( OSC.OSCMessage("/response/train", "train system:success" ) )
+    osc_client.send( OSC.OSCMessage("/response/train", "train_system:success" ) )
 
 def reset_handler(addr, tags, data, source):
     log_request("reset", addr, tags, data, source)
@@ -78,10 +83,17 @@ def export_data_handler(addr, tags, data, source):
     print "[Info] Returning export data: " + str(return_data)
     osc_client.send( OSC.OSCMessage("/response/export", return_data ) )
 
+def set_sequence_length_handler(addr, tags, data, source):
+    log_request("set sequence length", addr, tags, data, source)
+    set_system_sequence(data)
+    print "[Info] Set the sequence length as: " + str(data[0])
+    osc_client.send( OSC.OSCMessage("/response/set_sequence", "set_sequence:success" ) )
+
 def main():
     osc_server.addMsgHandler("/train", train_system_handler)
     osc_server.addMsgHandler("/reset", reset_handler)
     osc_server.addMsgHandler("/data", export_data_handler)
+    osc_server.addMsgHandler("/set_sequence", set_sequence_length_handler)
 
     # Check which handlers we have added
     print "[Info] Registered Callback-functions are :"
