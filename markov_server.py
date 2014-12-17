@@ -17,7 +17,7 @@ osc_client = OSC.OSCClient()
 osc_client.connect( send_to_address )
 
 emitter = KeyedMarkovEmitter()
-emitter.setup(16, ["hihat", "snare", "kick"], 2000)
+emitter.setup(16, sys.argv[2:], 2000)
 
 def log_request(id, addr, tags, stuff, source):
     print "--- Data received [" + str(id) + "]: (" + str(OSC.getUrlStr(source)) + " : " + str(addr) + ")"
@@ -26,15 +26,26 @@ def log_request(id, addr, tags, stuff, source):
     print ""
 
 def train_system(received_data, delimiter=":"):
+    """
+    Accepts data of the form:
+    [
+        "snare:2635",
+        "kick:2615"
+    ]
+
+    Where the key and the offset are separated by the delimiter. This function
+    then trains the emitter on this data as a sequence.
+    """
     training_data = []
     for datum in received_data:
         key, offset = datum.split(delimiter)
         d = {
             "key": key,
-            "offset": offset
+            "offset": int(offset)
         }
         training_data.append(d)
     emitter.train_sequence(training_data)
+    print "[Info] Trained system on data: " + str(training_data)
 
 def reset_system(received_data):
     pass
