@@ -38,10 +38,12 @@ def train_system(received_data, delimiter=":"):
     """
     training_data = []
     for datum in received_data:
+        if len(datum) <= 0:
+            continue
         key, offset = datum.split(delimiter)
         d = {
             "key": key,
-            "offset": int(offset)
+            "offset": float(offset)
         }
         training_data.append(d)
     emitter.train_sequence(training_data)
@@ -64,7 +66,7 @@ def export_system(received_data):
 def set_system_sequence(received_data):
     if len(received_data) > 1:
         print "[WARINING] Saw data for set system sequence with length greater than one!"
-    emitter.set_sequence_length(int(received_data[0]))
+    emitter.set_sequence_length(float(received_data[0]))
 
 def train_system_handler(addr, tags, data, source):
     log_request("train system", addr, tags, data, source)
